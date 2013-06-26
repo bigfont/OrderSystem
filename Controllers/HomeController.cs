@@ -13,6 +13,9 @@ namespace OrderSystem.Controllers {
             return View();
         }
 
+        /*
+         * Upload a file.
+         */
         [HttpPost]
         public ActionResult Index(HttpPostedFileBase file) {
 
