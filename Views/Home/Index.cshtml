@@ -1,4 +1,6 @@
-﻿@{
+﻿@model IEnumerable<OrderSystem.Models.ExcelRow>
+
+@{
     ViewBag.Title = "Home Page";
 }
 @section featured {
@@ -17,10 +19,16 @@
 @*http://haacked.com/archive/2010/07/16/uploading-files-with-aspnetmvc.aspx*@
 
 <form action="" method="post" enctype="multipart/form-data">
-  
-  <label for="file">Filename:</label>
-  <input type="file" name="file" id="file" />
 
-  <input type="submit" />
+    <label for="file">Filename:</label>
+    <input type="file" name="file" id="file" />
+
+    <input type="submit" />
 </form>
 
+<dl>
+    @foreach (var excelRow in Model) {
+        <dt>@excelRow.ItemName</dt>
+        <dd>@excelRow.ItemPrice</dd>
+    }
+</dl>
