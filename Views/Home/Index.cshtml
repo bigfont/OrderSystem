@@ -1,0 +1,26 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+@section featured {
+    <section class="featured">
+        <div class="content-wrapper">
+            <hgroup class="title">
+                <h1>@ViewBag.Title.</h1>
+                <h2>@ViewBag.Message</h2>
+            </hgroup>
+
+        </div>
+    </section>
+}
+
+
+@*http://haacked.com/archive/2010/07/16/uploading-files-with-aspnetmvc.aspx*@
+
+<form action="" method="post" enctype="multipart/form-data">
+  
+  <label for="file">Filename:</label>
+  <input type="file" name="file" id="file" />
+
+  <input type="submit" />
+</form>
+
