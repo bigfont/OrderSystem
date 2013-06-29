@@ -9,36 +9,52 @@ using LinqToExcel;
 
 namespace OrderSystem.Controllers {
     public class HomeController : Controller {
+
         public ActionResult Index() {
-            ViewBag.Message = "Hello world.";
-            var data = ReadExcel();
-            return View(data);
+            IEnumerable<ExcelRow> rows = GetAllExcelRows();
+            return View(rows.ToList());
         }
 
-        /*
-         * Upload a file.
-         */
         [HttpPost]
         public ActionResult Index(HttpPostedFileBase file) {
-
-            if (file.ContentLength > 0) {
-                var fileName = Path.GetFileName(file.FileName);
-                var path = Path.Combine(Server.MapPath("~/App_Data/uploads"), fileName);
-                file.SaveAs(path);
-            }
-
+            var filePath = UploadFile(file);
+            var enumerable = GetExcelRowEnumerableFromExcelFile(filePath);
+            UploadExcelRowEnumerableToDB(enumerable);
             return RedirectToAction("Index");
         }
 
-        private IEnumerable<ExcelRow> ReadExcel() {
+        private IEnumerable<ExcelRow> GetAllExcelRows() {
+            OrderSystem.DAL.OrderSystem db = new OrderSystem.DAL.OrderSystem();
+            var excelRows = from d in db.ExcelRow
+                            select d;
+            return excelRows;
+        }
 
-            var fileName = Server.MapPath("~/App_Data/uploads/Test1.xlsx");
+        private void UploadExcelRowEnumerableToDB(IEnumerable<ExcelRow> enumerable) {
+            OrderSystem.DAL.OrderSystem db = new OrderSystem.DAL.OrderSystem();
+            foreach (ExcelRow row in enumerable) {
+                db.ExcelRow.Add(row);
+            }
+            db.SaveChanges();
+        }
+
+        private IEnumerable<ExcelRow> GetExcelRowEnumerableFromExcelFile(string filePath) {
             var excel = new ExcelQueryFactory();
-            excel.FileName = fileName;
+            excel.FileName = filePath;
             IEnumerable<ExcelRow> query = from e in excel.Worksheet<ExcelRow>(0)
                                           select e;
-
             return query;
+        }
+
+        private string UploadFile(HttpPostedFileBase file) {
+            string fileName, filePath;
+            filePath = null;
+            if (file.ContentLength > 0) {
+                fileName = Path.GetFileName(file.FileName);
+                filePath = Path.Combine(Server.MapPath("~/App_Data/uploads"), fileName);
+                file.SaveAs(filePath);
+            }
+            return filePath;
         }
     }
 }
