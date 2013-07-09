@@ -1,4 +1,4 @@
-﻿@model IEnumerable<OrderSystem.Models.ExcelRow>
+﻿@model IEnumerable<OrderSystem.Models.VendorItem>
 
 @{
     ViewBag.Title = "Home Page";
@@ -22,7 +22,7 @@
 </form>
 
 <ul>
-    @foreach (var excelRow in Model) {
-        <li>@excelRow.ItemName, @excelRow.ItemPrice</li>    
+    @foreach (var vendorItem in Model) {
+        <li>@vendorItem.ItemName, @vendorItem.ItemPrice</li>    
     }
 </ul>

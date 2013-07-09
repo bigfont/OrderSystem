@@ -6,55 +6,78 @@ using System.Web;
 using System.Web.Mvc;
 using OrderSystem.Models;
 using LinqToExcel;
+using System.Collections;
 
 namespace OrderSystem.Controllers {
     public class HomeController : Controller {
 
         public ActionResult Index() {
-            IEnumerable<ExcelRow> rows = GetAllExcelRows();
-            return View(rows.ToList());
+
+            string excelFilePath, excelFileBaseName;
+            excelFileBaseName = "Test1.xlsx";
+            excelFilePath = Path.Combine(Server.MapPath("~/App_Data/uploads"), excelFileBaseName);
+            var vendorItems = LinqToExcel_PropertyToColumnMapping(excelFilePath);
+
+            return View(vendorItems);
+
         }
 
-        [HttpPost]
-        public ActionResult Index(HttpPostedFileBase file) {
-            var filePath = UploadFile(file);
-            var enumerable = GetExcelRowEnumerableFromExcelFile(filePath);
-            UploadExcelRowEnumerableToDB(enumerable);
-            return RedirectToAction("Index");
+        /// <summary>
+        ///  Query a worksheet with a header row
+        /// </summary>
+        /// <remarks>
+        /// The default query expects the first row to be the header row containing column names that match the property names on the generic class being used. 
+        /// It also expects the data to be in the worksheet named "Sheet1".
+        /// </remarks>
+        /// <param name="excelFileFullName"></param>
+        /// <returns></returns>
+        private IEnumerable<VendorItem> LinqToExcel_DefaultQuery(string excelFileFullName) {
+
+            var excel = new ExcelQueryFactory(excelFileFullName);
+            var vendorItems = from v in excel.Worksheet<VendorItem>()
+                                   select v;
+            return vendorItems;
         }
 
-        private IEnumerable<ExcelRow> GetAllExcelRows() {
-            OrderSystem.DAL.OrderSystem db = new OrderSystem.DAL.OrderSystem();
-            var excelRows = from d in db.ExcelRow
-                            select d;
-            return excelRows;
+        /// <summary>
+        ///  Query a specific worksheet by name
+        /// </summary>
+        /// <remarks>
+        /// Data from the worksheet named "Sheet1" is queried by default. 
+        /// To query a worksheet with a different name, pass the worksheet name in as an argument.
+        /// </remarks>
+        /// <param name="excelFileFullName"></param>
+        /// <returns></returns>
+        private IEnumerable<VendorItem> LinqToExcel_ByWorkSheetName(string excelFileFullName) {
+
+            var excel = new ExcelQueryFactory(excelFileFullName);
+            var vendorItems = from v in excel.Worksheet<VendorItem>("Sale Items") //worksheet name = 'Sale Items'
+                              select v;
+
+            return vendorItems;
         }
 
-        private void UploadExcelRowEnumerableToDB(IEnumerable<ExcelRow> enumerable) {
-            OrderSystem.DAL.OrderSystem db = new OrderSystem.DAL.OrderSystem();
-            foreach (ExcelRow row in enumerable) {
-                db.ExcelRow.Add(row);
-            }
-            db.SaveChanges();
+        /// <summary>
+        /// Property to column mapping
+        /// </summary>
+        /// <remarks>
+        /// Column names from the worksheet can be mapped to specific property names on the class by using the AddMapping() method. 
+        /// The property name can be passed in as a string or a compile time safe expression.
+        /// </remarks>
+        /// <param name="excelFileFullName"></param>
+        /// <returns></returns>
+        private IEnumerable<VendorItem> LinqToExcel_PropertyToColumnMapping(string excelFileFullName) {
+
+            var excel = new ExcelQueryFactory(excelFileFullName);
+
+            excel.AddMapping<VendorItem>(v => v.ItemName, "What We Call Our Items"); //pass mapping as compile time safe expression
+            excel.AddMapping("ItemPrice", "The Prices We Charge"); //pass mapping as string
+
+            var vendorItems = from v in excel.Worksheet<VendorItem>("Wierd Columns") //worksheet name = 'Wierd Columns'
+                              select v;
+
+            return vendorItems;
         }
 
-        private IEnumerable<ExcelRow> GetExcelRowEnumerableFromExcelFile(string filePath) {
-            var excel = new ExcelQueryFactory();
-            excel.FileName = filePath;
-            IEnumerable<ExcelRow> query = from e in excel.Worksheet<ExcelRow>(0)
-                                          select e;
-            return query;
-        }
-
-        private string UploadFile(HttpPostedFileBase file) {
-            string fileName, filePath;
-            filePath = null;
-            if (file.ContentLength > 0) {
-                fileName = Path.GetFileName(file.FileName);
-                filePath = Path.Combine(Server.MapPath("~/App_Data/uploads"), fileName);
-                file.SaveAs(filePath);
-            }
-            return filePath;
-        }
     }
 }

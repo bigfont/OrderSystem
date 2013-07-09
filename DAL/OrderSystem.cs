@@ -6,6 +6,6 @@ using System.Data.Entity.ModelConfiguration.Conventions;
 
 namespace OrderSystem.DAL {
     public class OrderSystem : DbContext {
-        public DbSet<ExcelRow> ExcelRow { get; set; }
+        public DbSet<VendorItem> ExcelRow { get; set; }
     }
 }
