@@ -6,19 +6,61 @@ using System.Web;
 using System.Web.Mvc;
 using OrderSystem.Models;
 using LinqToExcel;
-using System.Collections;
 
 namespace OrderSystem.Controllers {
     public class HomeController : Controller {
 
         public ActionResult Index() {
 
-            string excelFilePath, excelFileBaseName;
+            string excelFileFullName, excelFileBaseName;
+            IEnumerable<VendorItem> vendorItems;
+
+            //create the full name of the excel file
             excelFileBaseName = "Test1.xlsx";
-            excelFilePath = Path.Combine(Server.MapPath("~/App_Data/uploads"), excelFileBaseName);
-            var vendorItems = LinqToExcel_PropertyToColumnMapping(excelFilePath);
+            excelFileFullName = Path.Combine(Server.MapPath("~/App_Data/uploads"), excelFileBaseName);
+
+            //populate the viewbag with the worksheet names            
+            IEnumerable<string> worksheets = LinqToExcel_GetWorksheetNames(excelFileFullName);
+            ViewBag.WorksheetNames = new List<SelectListItem>();
+            foreach (string w in worksheets) {
+                ViewBag.WorksheetNames.Add(new SelectListItem { Text = w.ToString(), Value = "0" });
+            }
+
+            //populate the viewbag with column names
+            IEnumerable<string> columns = LinqToExcel_GetColumnNames(excelFileFullName, "Sheet1");
+            ViewBag.ColumnNames = new List<SelectListItem>();
+            foreach (string c in columns) {
+                ViewBag.ColumnNames.Add(new SelectListItem { Text = c.ToString(), Value = "0" });
+            }
+
+            //get the model to which we will bind the view
+            vendorItems = LinqToExcel_DefaultQuery(excelFileFullName);
 
             return View(vendorItems);
+
+        }
+
+        private IEnumerable<String> LinqToExcel_GetColumnNames(string excelFileFullName, string worksheetName) {
+
+            var excel = new ExcelQueryFactory(excelFileFullName);
+            var columnNames = excel.GetColumnNames(worksheetName);
+            return columnNames;
+
+        }
+
+        /// <summary>
+        ///  Query Worksheet Names
+        /// </summary>
+        /// <remarks>
+        /// The GetWorksheetNames() method can be used to retrieve the list of worksheet names in a spreadsheet.
+        /// </remarks>
+        /// <param name="excelFileFullName"></param>
+        /// <returns></returns>
+        private IEnumerable<String> LinqToExcel_GetWorksheetNames(string excelFileFullName) {
+
+            var excel = new ExcelQueryFactory(excelFileFullName);
+            var worksheetNames = excel.GetWorksheetNames();
+            return worksheetNames;                        
 
         }
 
@@ -48,7 +90,7 @@ namespace OrderSystem.Controllers {
         /// </remarks>
         /// <param name="excelFileFullName"></param>
         /// <returns></returns>
-        private IEnumerable<VendorItem> LinqToExcel_ByWorkSheetName(string excelFileFullName) {
+        private IEnumerable<VendorItem> LinqToExcel_ByWorksheetName(string excelFileFullName) {
 
             var excel = new ExcelQueryFactory(excelFileFullName);
             var vendorItems = from v in excel.Worksheet<VendorItem>("Sale Items") //worksheet name = 'Sale Items'

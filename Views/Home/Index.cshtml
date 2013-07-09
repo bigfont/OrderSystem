@@ -21,6 +21,9 @@
     <input type="submit" />
 </form>
 
+@Html.DropDownList("WorksheetNames")
+@Html.DropDownList("ColumnNames")
+
 <ul>
     @foreach (var vendorItem in Model) {
         <li>@vendorItem.ItemName, @vendorItem.ItemPrice</li>    
