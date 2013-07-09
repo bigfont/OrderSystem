@@ -10,33 +10,40 @@ using LinqToExcel;
 namespace OrderSystem.Controllers {
     public class HomeController : Controller {
 
+        private string ExcelFileFullName {
+
+            get {
+
+                //create the full name of the excel file
+                string excelFileBaseName, excelFileFullName;
+                excelFileBaseName = "Test1.xlsx";
+                excelFileFullName = Path.Combine(Server.MapPath("~/App_Data/uploads"), excelFileBaseName);
+                return excelFileFullName;
+            }
+
+        }
+
         public ActionResult Index() {
 
-            string excelFileFullName, excelFileBaseName;
-            IEnumerable<VendorItem> vendorItems;
-
-            //create the full name of the excel file
-            excelFileBaseName = "Test1.xlsx";
-            excelFileFullName = Path.Combine(Server.MapPath("~/App_Data/uploads"), excelFileBaseName);
-
             //populate the viewbag with the worksheet names            
-            IEnumerable<string> worksheets = LinqToExcel_GetWorksheetNames(excelFileFullName);
+            IEnumerable<string> worksheets = LinqToExcel_GetWorksheetNames(ExcelFileFullName);
             ViewBag.WorksheetNames = new List<SelectListItem>();
             foreach (string w in worksheets) {
                 ViewBag.WorksheetNames.Add(new SelectListItem { Text = w.ToString(), Value = "0" });
             }
 
-            //populate the viewbag with column names
-            IEnumerable<string> columns = LinqToExcel_GetColumnNames(excelFileFullName, "Sheet1");
-            ViewBag.ColumnNames = new List<SelectListItem>();
-            foreach (string c in columns) {
-                ViewBag.ColumnNames.Add(new SelectListItem { Text = c.ToString(), Value = "0" });
-            }
+            return View();
+
+        }
+
+        public ActionResult SelectCategory(int WorksheetNames) {
+
+            IEnumerable<VendorItem> vendorItems;
 
             //get the model to which we will bind the view
-            vendorItems = LinqToExcel_DefaultQuery(excelFileFullName);
+            vendorItems = LinqToExcel_DefaultQuery(ExcelFileFullName);
 
-            return View(vendorItems);
+            return View("Index", vendorItems);
 
         }
 
@@ -60,7 +67,7 @@ namespace OrderSystem.Controllers {
 
             var excel = new ExcelQueryFactory(excelFileFullName);
             var worksheetNames = excel.GetWorksheetNames();
-            return worksheetNames;                        
+            return worksheetNames;
 
         }
 
@@ -77,7 +84,7 @@ namespace OrderSystem.Controllers {
 
             var excel = new ExcelQueryFactory(excelFileFullName);
             var vendorItems = from v in excel.Worksheet<VendorItem>()
-                                   select v;
+                              select v;
             return vendorItems;
         }
 

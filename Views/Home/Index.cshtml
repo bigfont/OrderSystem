@@ -15,17 +15,22 @@
     </section>
 }
 
-<form action="" method="post" enctype="multipart/form-data">
-    <label for="file">Filename:</label>
-    <input type="file" name="file" id="file" />
-    <input type="submit" />
-</form>
-
-@Html.DropDownList("WorksheetNames")
-@Html.DropDownList("ColumnNames")
-
-<ul>
-    @foreach (var vendorItem in Model) {
-        <li>@vendorItem.ItemName, @vendorItem.ItemPrice</li>    
+@if (ViewBag.WorksheetNames != null) { 
+    using (Html.BeginForm("SelectCategory", "Home", FormMethod.Get)) {
+        @Html.DropDownList("WorksheetNames")
+        <p>
+            <input type="submit" value="Submit" />
+        </p>
     }
-</ul>
+}
+
+
+@if (Model != null) { 
+    <ul>
+
+        @foreach (var vendorItem in Model) {
+            <li>@vendorItem.ItemName, @vendorItem.ItemPrice</li>    
+        }
+    </ul>
+}
+
